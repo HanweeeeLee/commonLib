@@ -13,6 +13,9 @@
 		78B12E1C24D19BF5009AE29A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 78B12E1A24D19BF5009AE29A /* Main.storyboard */; };
 		78B12E1E24D19BF6009AE29A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 78B12E1D24D19BF6009AE29A /* Assets.xcassets */; };
 		78B12E2124D19BF6009AE29A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 78B12E1F24D19BF6009AE29A /* LaunchScreen.storyboard */; };
+		78B12E2924D19D86009AE29A /* Module.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B12E2824D19D86009AE29A /* Module.swift */; };
+		78B12E2B24D1A3C8009AE29A /* ErrorCodeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B12E2A24D1A3C8009AE29A /* ErrorCodeManager.swift */; };
+		78B12E2D24D1A574009AE29A /* LocalizedMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B12E2C24D1A574009AE29A /* LocalizedMap.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +27,9 @@
 		78B12E1D24D19BF6009AE29A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		78B12E2024D19BF6009AE29A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		78B12E2224D19BF6009AE29A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		78B12E2824D19D86009AE29A /* Module.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Module.swift; sourceTree = "<group>"; };
+		78B12E2A24D1A3C8009AE29A /* ErrorCodeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorCodeManager.swift; sourceTree = "<group>"; };
+		78B12E2C24D1A574009AE29A /* LocalizedMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizedMap.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,6 +69,9 @@
 				78B12E1D24D19BF6009AE29A /* Assets.xcassets */,
 				78B12E1F24D19BF6009AE29A /* LaunchScreen.storyboard */,
 				78B12E2224D19BF6009AE29A /* Info.plist */,
+				78B12E2824D19D86009AE29A /* Module.swift */,
+				78B12E2A24D1A3C8009AE29A /* ErrorCodeManager.swift */,
+				78B12E2C24D1A574009AE29A /* LocalizedMap.swift */,
 			);
 			path = ErrorPrintModule;
 			sourceTree = "<group>";
@@ -138,7 +147,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				78B12E2D24D1A574009AE29A /* LocalizedMap.swift in Sources */,
 				78B12E1924D19BF5009AE29A /* ViewController.swift in Sources */,
+				78B12E2B24D1A3C8009AE29A /* ErrorCodeManager.swift in Sources */,
+				78B12E2924D19D86009AE29A /* Module.swift in Sources */,
 				78B12E1524D19BF5009AE29A /* AppDelegate.swift in Sources */,
 				78B12E1724D19BF5009AE29A /* SceneDelegate.swift in Sources */,
 			);
