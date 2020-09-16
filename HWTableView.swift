@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SkeletonView
 
 class HWTableView: UITableView {
     var obj:HWTableViewDelegate = HWTableViewDelegate()
@@ -14,22 +15,119 @@ class HWTableView: UITableView {
         didSet {
             if delegate !== self.obj {
                 self.obj.originDelegate = self.delegate
-                self.delegate = obj
-                self.obj.tableView = self
             }
         }
     }
+    
+    override var dataSource: UITableViewDataSource? {
+        didSet {
+            if dataSource !== self.obj {
+                self.obj.originDataSource = self.dataSource
+            }
+        }
+    }
+    
+    func showSkeletonViewAndInit() {
+        self.isSkeletonable = true
+        self.obj.tableView = self
+        self.delegate = self.obj.originDelegate
+        self.dataSource = self.obj.originDataSource
+        self.showAnimatedGradientSkeleton()
+        self.startSkeletonAnimation()
+        self.obj.isShowDisplayAnimation = true
+        self.obj.isShownFirstHWTableViewDisplay = false
+    }
+    
+    func hideSkeletonViewAndConnectMyCustomProtocol() {
+        self.stopSkeletonAnimation()
+        self.hideSkeleton()
+        self.delegate = self.obj
+        self.dataSource = self.obj
+    }
+    
+//    override func reloadData() {
+//        super.reloadData()
+//    }
+    
 }
 
 class HWTableViewDelegate:NSObject {
     weak var originDelegate:UITableViewDelegate? = nil
+    weak var originDataSource:UITableViewDataSource? = nil
     weak var tableView:UITableView? = nil
-    let defaultCellHeight:CGFloat = 50
+    
+    let defaultCellHeight:CGFloat = 100
+    
+    var isShowDisplayAnimation:Bool = false
+    var isShownFirstHWTableViewDisplay:Bool = false
+}
+
+extension HWTableViewDelegate:UITableViewDataSource {
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return self.originDataSource?.tableView(tableView, numberOfRowsInSection: section) ?? 0
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell:UITableViewCell = self.originDataSource?.tableView(tableView, cellForRowAt: indexPath) ?? UITableViewCell()
+//        cell.stopSkeletonAnimation()
+//        cell.hideSkeleton() 이거 호출하면 셀이 이상하게 호출됨 흠....
+        return cell
+    }
+    
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return self.originDataSource?.numberOfSections?(in: tableView) ?? 1
+    }
+    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        self.originDataSource?.tableView?(tableView, commit: editingStyle, forRowAt: indexPath)
+    }
+    func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        return self.originDataSource?.tableView?(tableView, canEditRowAt: indexPath) ?? false
+    }
+    func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
+        return self.originDataSource?.tableView?(tableView, canMoveRowAt: indexPath) ?? falseå
+    }
+    func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+        return self.originDataSource?.tableView?(tableView, titleForFooterInSection: section) ?? nil
+    }
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return self.originDataSource?.tableView?(tableView, titleForHeaderInSection: section) ?? nil
+    }
+    func tableView(_ tableView: UITableView, sectionForSectionIndexTitle title: String, at index: Int) -> Int {
+        return self.originDataSource?.tableView?(tableView, sectionForSectionIndexTitle: title, at: index) ?? 0
+    }
+    func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        self.originDataSource?.tableView?(tableView, moveRowAt: sourceIndexPath, to: destinationIndexPath)
+    }
+    
 }
 
 extension HWTableViewDelegate:UITableViewDelegate {
+    
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        self.isShownFirstHWTableViewDisplay = true
+        if isShowDisplayAnimation {
+            cell.transform = CGAffineTransform(translationX: 0, y: 100 * 1.0)
+            cell.alpha = 0
+            UIView.animate(
+                withDuration: 0.5,
+                delay: 0 * Double(indexPath.row),
+                options: [.curveEaseInOut],
+                animations: {
+                    cell.transform = CGAffineTransform(translationX: 0, y: 0)
+                    cell.alpha = 1
+            })
+        }
         self.originDelegate?.tableView?(tableView, willDisplay: cell, forRowAt: indexPath)
+    }
+    func tableView(_ tableView: UITableView, didEndDisplaying cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        if self.isShownFirstHWTableViewDisplay {
+            if self.isShowDisplayAnimation {
+                self.isShowDisplayAnimation = false
+            }
+        }
+        self.originDelegate?.tableView?(tableView, didEndDisplaying: cell, forRowAt: indexPath)
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         self.originDelegate?.tableView?(tableView, didSelectRowAt:indexPath)
@@ -115,9 +213,6 @@ extension HWTableViewDelegate:UITableViewDelegate {
     func tableView(_ tableView: UITableView, shouldUpdateFocusIn context: UITableViewFocusUpdateContext) -> Bool {
         return self.originDelegate?.tableView?(tableView, shouldUpdateFocusIn: context) ?? false
     }
-    func tableView(_ tableView: UITableView, didEndDisplaying cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        self.originDelegate?.tableView?(tableView, didEndDisplaying: cell, forRowAt: indexPath)
-    }
     func tableView(_ tableView: UITableView, shouldBeginMultipleSelectionInteractionAt indexPath: IndexPath) -> Bool {
         return self.originDelegate?.tableView?(tableView, shouldBeginMultipleSelectionInteractionAt: indexPath) ?? false
     }
@@ -150,5 +245,46 @@ extension HWTableViewDelegate:UITableViewDelegate {
     }
     func tableView(_ tableView: UITableView, targetIndexPathForMoveFromRowAt sourceIndexPath: IndexPath, toProposedIndexPath proposedDestinationIndexPath: IndexPath) -> IndexPath {
         return self.originDelegate?.tableView?(tableView, targetIndexPathForMoveFromRowAt: sourceIndexPath, toProposedIndexPath: proposedDestinationIndexPath) ?? IndexPath(row: 0, section: 0)
+    }
+    
+    //MARK: scroll view
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        self.originDelegate?.scrollViewDidScroll?(scrollView)
+    }
+    func scrollViewDidZoom(_ scrollView: UIScrollView) {
+        self.originDelegate?.scrollViewDidZoom?(scrollView)
+    }
+    func scrollViewDidScrollToTop(_ scrollView: UIScrollView) {
+        self.originDelegate?.scrollViewDidScrollToTop?(scrollView)
+    }
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        self.originDelegate?.scrollViewWillBeginDragging?(scrollView)
+    }
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        self.originDelegate?.scrollViewDidEndDecelerating?(scrollView)
+    }
+    func scrollViewWillBeginDecelerating(_ scrollView: UIScrollView) {
+        self.originDelegate?.scrollViewWillBeginDecelerating?(scrollView)
+    }
+    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        self.originDelegate?.scrollViewDidEndScrollingAnimation?(scrollView)
+    }
+    func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool {
+        return self.originDelegate?.scrollViewShouldScrollToTop?(scrollView) ?? false
+    }
+    func scrollViewDidChangeAdjustedContentInset(_ scrollView: UIScrollView) {
+        self.originDelegate?.scrollViewDidChangeAdjustedContentInset?(scrollView)
+    }
+    func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) {
+        self.originDelegate?.scrollViewWillBeginZooming?(scrollView, with: view)
+    }
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        self.originDelegate?.scrollViewDidEndDragging?(scrollView, willDecelerate: decelerate)
+    }
+    func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView?, atScale scale: CGFloat) {
+        self.originDelegate?.scrollViewDidEndZooming?(scrollView, with: view, atScale: scale)
+    }
+    func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        self.originDelegate?.scrollViewWillEndDragging?(scrollView, withVelocity: velocity, targetContentOffset: targetContentOffset)
     }
 }
