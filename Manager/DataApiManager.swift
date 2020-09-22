@@ -9,6 +9,7 @@
 import UIKit
 import SwiftyJSON
 import Alamofire
+import rxSwift
 
 class DataApiManager: NSObject {
 
@@ -60,5 +61,29 @@ class DataApiManager: NSObject {
         }
 
         return dataRequest
+    }
+    
+    @discardableResult class func requestPOSTURLRx(_ strURL : String, params : Parameters = [:], headers : [String : String]?) -> Observable<JSON> {
+        return Observable.create { emitter in
+            DataApiManager.requestPOSTURL(strURL, params: params, headers: headers, success: { responseJson in
+                emitter.onNext(responseJson)
+                emitter.onCompleted()
+            }, failure: { err in
+                emitter.onError(err)
+            })
+            return Disposables.create()
+        }
+    }
+    
+    @discardableResult class func requestGETURLRx(_ strURL: String, headers : [String : String]?) -> Observable<JSON> {
+        return Observable.create { emitter in
+            DataApiManager.requestGETURL(strURL, headers: headers, success: { responseJson in
+                emitter.onNext(responseJson)
+                emitter.onCompleted()
+            }, failure: { err in
+                emitter.onError(err)
+            })
+            return Disposables.create()
+        }
     }
 }
