@@ -9,7 +9,7 @@
 import UIKit
 
 
-protocol HWDataProtocol:Codable {
+protocol HWDataProtocol:Codable,Equatable {
     func toJson() -> String
     static func fromJson<T:HWDataProtocol>(jsonData:Data?,object:T) -> T?
 }
