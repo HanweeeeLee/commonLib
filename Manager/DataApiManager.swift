@@ -9,7 +9,7 @@
 import UIKit
 import SwiftyJSON
 import Alamofire
-import rxSwift
+import RxSwift
 
 class DataApiManager: NSObject {
 
