@@ -24,13 +24,15 @@ import SnapKit
     @objc optional func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool
     @objc optional func scrollViewDidScrollToTop(_ scrollView: UIScrollView)
     
+    @objc optional func callNextPage(_ scrollView:UIScrollView)
 }
 
 @objc protocol HWTableViewDatasource:class {
     func hwTableView(_ hwTableView: HWTableView, numberOfRowsInSection section: Int) -> Int
     func hwTableView(_ hwTableView: HWTableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell
     func hwTableViewSekeletonViewCellIdentifier(_ hwTableView: HWTableView) -> String
-    func hwTableViewSekeletonViewCount(_ hwTableView: HWTableView) -> Int
+    func hwTableViewSekeletonViewHeight(_ hwTableView: HWTableView) -> CGFloat
+    @objc optional func hwTableViewSekeletonViewCount(_ hwTableView: HWTableView) -> Int
     @objc optional func hwTableView(_ hwtableView: HWTableView, heightForRowAt indexPath:IndexPath) -> CGFloat
     @objc optional func numberOfSections(in hwtableView: HWTableView) -> Int
     @objc optional func hwTableView(_ hwtableView: HWTableView, viewForHeaderInSection section: Int) -> UIView?
@@ -48,15 +50,17 @@ class HWTableView: UIView {
     public weak var dataSource:HWTableViewDatasource?
     
     public lazy var tableView:UITableView = UITableView(frame: self.bounds)
-    public var isShowDisplayAnimation:Bool = false
-    public var reloadFlag:Bool = false
     public lazy var separatorStype:UITableViewCell.SeparatorStyle = self.tableView.separatorStyle {
         didSet {
             self.tableView.separatorStyle = self.separatorStype
         }
     }
     
+    public var callNextPageBeforeOffset:CGFloat = 150
+    
     //MARK: private property
+    private var isShowDisplayAnimation:Bool = false
+    private var reloadFlag:Bool = false
     private let defaultCellHeight:CGFloat = 100
     private var numberOfRows:UInt = 0
     private var noResultView:UIView?
@@ -88,21 +92,34 @@ class HWTableView: UIView {
         self.isSkeletonable = true
     }
     
+    private func getSkeletonCellBestCount(cellHeight:CGFloat) -> Int {
+        var result:Int = 0
+        result = Int(self.bounds.height/cellHeight)
+        if self.bounds.height.truncatingRemainder(dividingBy: cellHeight) != 0 {
+            result += 1
+        }
+        return result
+    }
+    
     //MARK: public func
     public func showSkeletonHW() {
-        self.isShowDisplayAnimation = false
-        self.tableView.isSkeletonable = true
-        self.showAnimatedGradientSkeleton()
-        self.startSkeletonAnimation()
+        DispatchQueue.main.async { [weak self] in
+            self?.isShowDisplayAnimation = false
+            self?.tableView.isSkeletonable = true
+            self?.showAnimatedGradientSkeleton()
+            self?.startSkeletonAnimation()
+        }
+        
     }
 
     public func hideSkeletonHW() {
-        print("true set")
-        self.isShowDisplayAnimation = true
-        self.stopSkeletonAnimation()
-        self.hideSkeleton()
-        self.tableView.reloadData() //리로드를 안해주면 데이터가 이상하게 set된다 ㅡㅡ; skeletonview 버그인듯
-        self.reloadFlag = true
+        DispatchQueue.main.async { [weak self] in
+            self?.isShowDisplayAnimation = true
+            self?.stopSkeletonAnimation()
+            self?.hideSkeleton()
+            self?.tableView.reloadData() //리로드를 안해주면 데이터가 이상하게 set된다 ㅡㅡ; skeletonview 버그인듯
+            self?.reloadFlag = true
+        }
     }
     
     public func addNoResultView(_ view:UIView) {
@@ -123,15 +140,20 @@ class HWTableView: UIView {
         self.noResultView = nil
     }
     
-    public func showNoResultView() {
-        DispatchQueue.main.async {
-            self.noResultView?.isHidden = false
+    public func showNoResultView(completion:(() -> ())?) {
+        DispatchQueue.main.async { [weak self] in
+            self?.noResultView?.isHidden = false
+            self?.isShowDisplayAnimation = true
+            completion?()
         }
     }
     
-    public func hideNoResultView() {
-        DispatchQueue.main.async {
-            self.noResultView?.isHidden = true
+    public func hideNoResultView(completion:(() -> ())?) {
+        DispatchQueue.main.async { [weak self] in
+            self?.noResultView?.isHidden = true
+            self?.isShowDisplayAnimation = true
+            self?.reloadFlag = false
+            completion?()
         }
         
     }
@@ -184,9 +206,18 @@ extension HWTableView:UITableViewDelegate {
         self.delegate?.hwTableView?(self, didSelectRowAt: indexPath)
     }
     
-    //여기서부터 구현
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         self.delegate?.scrollViewDidScroll?(scrollView)
+        
+        let offset = scrollView.contentOffset;
+        let bounds = scrollView.bounds;
+        let size = scrollView.contentSize;
+        let inset = scrollView.contentInset;
+        let y = offset.y + bounds.size.height - inset.bottom;
+        let h = size.height;
+        if y + self.callNextPageBeforeOffset >= h {
+            self.delegate?.callNextPage?(scrollView)
+        }
     }
     
     func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
@@ -229,7 +260,8 @@ extension HWTableView:SkeletonTableViewDataSource {
     }
 
     func collectionSkeletonView(_ skeletonView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.dataSource?.hwTableViewSekeletonViewCount(self) ?? 0
+        let cellHight:CGFloat = self.dataSource?.hwTableViewSekeletonViewHeight(self) ?? 0
+        return self.dataSource?.hwTableViewSekeletonViewCount?(self) ?? self.getSkeletonCellBestCount(cellHeight: cellHight)
     }
 }
 
