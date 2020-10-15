@@ -5,7 +5,6 @@
 //  Created by hanwe lee on 2020/09/29.
 //  Copyright © 2020 hanwe. All rights reserved.
 //
-
 import UIKit
 import SkeletonView
 import SnapKit
@@ -50,17 +49,17 @@ class HWTableView: UIView {
     public weak var dataSource:HWTableViewDatasource?
     
     public lazy var tableView:UITableView = UITableView(frame: self.bounds)
-    public lazy var separatorStype:UITableViewCell.SeparatorStyle = self.tableView.separatorStyle {
+    public lazy var separatorStyle:UITableViewCell.SeparatorStyle = self.tableView.separatorStyle {
         didSet {
-            self.tableView.separatorStyle = self.separatorStype
+            self.tableView.separatorStyle = self.separatorStyle
         }
     }
     
     public var callNextPageBeforeOffset:CGFloat = 150
     
     //MARK: private property
-    private var isShowDisplayAnimation:Bool = false
-    private var reloadFlag:Bool = false
+    private var isShowDisplayAnimation:Bool = true
+    private var isShowingSkeletonView:Bool = false
     private let defaultCellHeight:CGFloat = 100
     private var numberOfRows:UInt = 0
     private var noResultView:UIView?
@@ -108,17 +107,18 @@ class HWTableView: UIView {
             self?.tableView.isSkeletonable = true
             self?.showAnimatedGradientSkeleton()
             self?.startSkeletonAnimation()
+            self?.isShowingSkeletonView = true
         }
         
     }
 
     public func hideSkeletonHW() {
         DispatchQueue.main.async { [weak self] in
-            self?.isShowDisplayAnimation = true
             self?.stopSkeletonAnimation()
             self?.hideSkeleton()
             self?.tableView.reloadData() //리로드를 안해주면 데이터가 이상하게 set된다 ㅡㅡ; skeletonview 버그인듯
-            self?.reloadFlag = true
+            self?.isShowingSkeletonView = false
+            self?.isShowDisplayAnimation = true
         }
     }
     
@@ -152,7 +152,6 @@ class HWTableView: UIView {
         DispatchQueue.main.async { [weak self] in
             self?.noResultView?.isHidden = true
             self?.isShowDisplayAnimation = true
-            self?.reloadFlag = false
             completion?()
         }
         
@@ -176,8 +175,7 @@ class HWTableView: UIView {
 
 extension HWTableView:UITableViewDelegate {
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-//        print("willDisplay")
-        if self.isShowDisplayAnimation {
+        if !self.isShowingSkeletonView && self.isShowDisplayAnimation {
             cell.transform = CGAffineTransform(translationX: 0, y: 100 * 1.0)
             cell.alpha = 0
             UIView.animate(
@@ -187,17 +185,14 @@ extension HWTableView:UITableViewDelegate {
                 animations: {
                     cell.transform = CGAffineTransform(translationX: 0, y: 0)
                     cell.alpha = 1
-            })
+                })
+            
         }
         self.delegate?.hwTableView?(self, willDisplay: cell, forRowAt: indexPath)
     }
     func tableView(_ tableView: UITableView, didEndDisplaying cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-//        print("didEndDisplay")
-        if reloadFlag {
-            if self.isShowDisplayAnimation {
-                self.isShowDisplayAnimation = false
-                self.reloadFlag = false
-            }
+        if !self.isShowingSkeletonView && self.isShowDisplayAnimation {
+            self.isShowDisplayAnimation = false
         }
         self.delegate?.hwTableView?(self, didEndDisplaying: cell, forRowAt: indexPath)
     }
