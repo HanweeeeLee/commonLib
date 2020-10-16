@@ -57,12 +57,16 @@ class HWTableView: UIView {
     
     public var callNextPageBeforeOffset:CGFloat = 150
     
+    public var minimumSkeletonSecond:CGFloat = 0.5
+    
     //MARK: private property
     private var isShowDisplayAnimation:Bool = true
     private var isShowingSkeletonView:Bool = false
+    private var isOverMinimumSkeletionTimer:Bool = true
     private let defaultCellHeight:CGFloat = 100
     private var numberOfRows:UInt = 0
     private var noResultView:UIView?
+    private var minimumSkeletionTimer: Timer?
     
     //MARK: lifeCycle
     
@@ -100,9 +104,18 @@ class HWTableView: UIView {
         return result
     }
     
+    @objc private func minimumSkeletionTimerCallback() {
+        self.isOverMinimumSkeletionTimer = true
+    }
+    
     //MARK: public func
     public func showSkeletonHW() {
+        self.isOverMinimumSkeletionTimer = false
         DispatchQueue.main.async { [weak self] in
+            if self?.minimumSkeletionTimer?.isValid ?? false {
+                self?.minimumSkeletionTimer?.invalidate()
+            }
+            self?.minimumSkeletionTimer = Timer.scheduledTimer(timeInterval: TimeInterval(self!.minimumSkeletonSecond), target: self!, selector: #selector(self!.minimumSkeletionTimerCallback), userInfo: nil, repeats: false)
             self?.isShowDisplayAnimation = false
             self?.tableView.isSkeletonable = true
             self?.showAnimatedGradientSkeleton()
@@ -113,12 +126,22 @@ class HWTableView: UIView {
     }
 
     public func hideSkeletonHW() {
-        DispatchQueue.main.async { [weak self] in
-            self?.stopSkeletonAnimation()
-            self?.hideSkeleton()
-            self?.tableView.reloadData() //리로드를 안해주면 데이터가 이상하게 set된다 ㅡㅡ; skeletonview 버그인듯
-            self?.isShowingSkeletonView = false
-            self?.isShowDisplayAnimation = true
+        if self.isOverMinimumSkeletionTimer {
+            DispatchQueue.main.async { [weak self] in
+                self?.stopSkeletonAnimation()
+                self?.hideSkeleton()
+                self?.tableView.reloadData() //리로드를 안해주면 데이터가 이상하게 set된다 ㅡㅡ; skeletonview 버그인듯
+                self?.isShowingSkeletonView = false
+                self?.isShowDisplayAnimation = true
+            }
+        }
+        else {
+            DispatchQueue.global(qos: .default).async { [weak self] in
+                usleep(3 * 100 * 1000)
+                DispatchQueue.main.async { [weak self] in
+                    self?.hideSkeletonHW()
+                }
+            }
         }
     }
     
