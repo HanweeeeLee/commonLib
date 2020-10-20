@@ -14,17 +14,40 @@ enum TestEnum:Int {
     case case3
 }
 
-struct MyError {
-    var errorCode:TestEnum
-    var errorMsgLocalizedKey:String
-}
-
 class ErrorCodeManager: NSObject {
     
-    internal static func getErrorMessage(errorCode:TestEnum) -> String {
+    internal static func getErrMsg(errMsg:String,errorCode:Int?) -> String {
         var resultValue:String = ""
-        let msg:String = getLocalizedKeyFromErrorCode(errorCode: errorCode).localized
-        resultValue = "\(msg)" + "\n" + "[\(errorCode.rawValue)]"
+        resultValue = "\(errMsg)"
+        if errorCode != nil {
+            resultValue = resultValue + "\n[\(errorCode!)]"
+        }
+        return resultValue
+    }
+    
+    internal static func getErrMsg(err:Error?,errorCode:Int?) -> String {
+        var resultValue:String = ""
+        var msg:String = ""
+        if err != nil {
+            msg = err!.localizedDescription
+        }
+        else {
+            msg = "Error"//이렇게?
+        }
+        resultValue = "\(msg)"
+        if errorCode != nil {
+            resultValue = resultValue + "\n[\(errorCode!)]"
+        }
+        return resultValue
+    }
+    
+    internal static func getErrMsg(errCode:TestEnum,error:Error? = nil) -> String {
+        var resultValue:String = ""
+        let msg:String = getLocalizedKeyFromErrorCode(errorCode: errCode).localized
+        resultValue = "\(msg)" + "\n" + "[\(errCode.rawValue)]"
+        if error != nil {
+            resultValue = resultValue + "\n\(error!.localizedDescription)"
+        }
         
         return resultValue
     }
