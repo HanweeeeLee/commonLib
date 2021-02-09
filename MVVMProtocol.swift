@@ -27,5 +27,7 @@ extension MVVMViewController {
 }
 
 protocol MVVMViewModel: class {
+    var disposeBag: DisposeBag { get set }
+    
     func subscribeInputs()
 }
