@@ -9,8 +9,11 @@
 import RxSwift
 
 protocol MVVMViewController: class {
+    associatedtype MVVMViewModelClassType: MVVMViewModel
+    
     var disposeBag: DisposeBag { get set }
     var isViewModelBinded: Bool { get set }
+    var viewModel: MVVMViewModelClassType! { get set }
     
     func bind(viewModel: MVVMViewModel)
     func bindingViewModel<T: MVVMViewModel>(viewModel: T) -> T
