@@ -68,6 +68,42 @@ class EtherTests: XCTestCase {
         XCTAssertTrue(value.isZero)
     }
     
+    func testGrater() throws {
+        let value1: Ether = Ether("1.2")
+        let value2: Ether = Ether("1")
+        XCTAssertTrue(value1 > value2)
+    }
+    
+    func testGrater2() throws {
+        let value1: Ether = Ether("1.2")
+        let value2: Ether = Ether("1.5")
+        XCTAssertTrue(value1 < value2)
+    }
+    
+    func testGraterEqual1() throws {
+        let value1: Ether = Ether("1.2")
+        let value2: Ether = Ether("1.2")
+        XCTAssertTrue(value1 >= value2)
+    }
+    
+    func testGraterEqual2() throws {
+        let value1: Ether = Ether("1.2")
+        let value2: Ether = Ether("1.1")
+        XCTAssertTrue(value1 >= value2)
+    }
+    
+    func testGraterEqual3() throws {
+        let value1: Ether = Ether("1.2")
+        let value2: Ether = Ether("1.5")
+        XCTAssertTrue(value1 <= value2)
+    }
+    
+    func testGraterEqual4() throws {
+        let value1: Ether = Ether("1.5")
+        let value2: Ether = Ether("1.5")
+        XCTAssertTrue(value1 <= value2)
+    }
+    
     
 
 }

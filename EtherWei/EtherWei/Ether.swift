@@ -95,6 +95,54 @@ struct Ether: Equatable {
         return lhs.rawValue == rhs.rawValue
     }
     
+    static func < (lhs: Ether, rhs: Ether) -> Bool {
+        let lhsWei = lhs.toWei()
+        let rhsWei = rhs.toWei()
+        guard let bigUIntLhsWei = BigUInt.init(lhsWei.rawValue) else { return false }
+        guard let bigUIntRhsWei = BigUInt.init(rhsWei.rawValue) else { return false }
+        if bigUIntLhsWei < bigUIntRhsWei {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    static func > (lhs: Ether, rhs: Ether) -> Bool {
+        let lhsWei = lhs.toWei()
+        let rhsWei = rhs.toWei()
+        guard let bigUIntLhsWei = BigUInt.init(lhsWei.rawValue) else { return false }
+        guard let bigUIntRhsWei = BigUInt.init(rhsWei.rawValue) else { return false }
+        if bigUIntLhsWei > bigUIntRhsWei {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    static func <= (lhs: Ether, rhs: Ether) -> Bool {
+        let lhsWei = lhs.toWei()
+        let rhsWei = rhs.toWei()
+        guard let bigUIntLhsWei = BigUInt.init(lhsWei.rawValue) else { return false }
+        guard let bigUIntRhsWei = BigUInt.init(rhsWei.rawValue) else { return false }
+        if bigUIntLhsWei <= bigUIntRhsWei {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    static func >= (lhs: Ether, rhs: Ether) -> Bool {
+        let lhsWei = lhs.toWei()
+        let rhsWei = rhs.toWei()
+        guard let bigUIntLhsWei = BigUInt.init(lhsWei.rawValue) else { return false }
+        guard let bigUIntRhsWei = BigUInt.init(rhsWei.rawValue) else { return false }
+        if bigUIntLhsWei >= bigUIntRhsWei {
+            return true
+        } else {
+            return false
+        }
+    }
+    
     func toWei() -> Wei {
         if self.rawValue.contains(".") {
             let splited = self.rawValue.split(separator: ".")
@@ -129,6 +177,15 @@ struct Ether: Equatable {
         return Wei(weiResultRaw).toEther().dropRemain()
     }
     
+    func multiple(_ value: Ether) -> Ether {
+        let selfWei = self.toWei()
+        guard let bigUIntSelf = BigUInt.init(selfWei.rawValue) else { return Ether.init("0") }
+        let waiTarget = value.toWei()
+        guard let target = BigUInt.init(waiTarget.rawValue) else { return Ether.init("0") }
+        let weiResultRaw = bigUIntSelf.multiplied(by: target).description
+        return Wei(weiResultRaw).toEther()
+    }
+    
     func toDigitBelow(_ to: UInt = 6) -> String {
         if self.rawValue.contains(".") {
             let splited = self.rawValue.split(separator: ".")
@@ -149,6 +206,43 @@ struct Ether: Equatable {
         } else {
             return self.rawValue
         }
+    }
+    
+    func divide(rate: String) -> Ether {
+        let selfWei = self.toWei()
+        guard let bigUIntSelf = BigUInt.init(selfWei.rawValue + "000000000000000000") else { return Ether.init("0") }
+        let rate = Ether(rate)
+        let waiRate = rate.toWei()
+        guard let rate = BigUInt.init(waiRate.rawValue) else { return Ether.init("0") }
+        let resultBigUInt = bigUIntSelf/rate
+        
+        return Wei(resultBigUInt.description).toEther()
+    }
+    
+    func divide(_ value: Ether) -> Ether {
+        let selfWei = self.toWei()
+        guard let bigUIntSelf = BigUInt.init(selfWei.rawValue) else { return Ether.init("0") }
+        let waiTarget = value.toWei()
+        guard let target = BigUInt.init(waiTarget.rawValue) else { return Ether.init("0") }
+        let resultBigUInt = bigUIntSelf/target
+        
+        return Wei(resultBigUInt.description).toEther()
+    }
+    
+    func subtract(to: Ether) -> Ether {
+        guard var selfBigUInt = BigUInt.init(self.toWei().rawValue) else { return self }
+        guard let toBigUInt = BigUInt.init(to.toWei().rawValue) else { return self }
+        if toBigUInt > selfBigUInt {
+            return Ether("0")
+        }
+        selfBigUInt.subtract(toBigUInt)
+        return Wei(selfBigUInt.description).toEther()
+    }
+    
+    func add(to: Ether) -> Ether {
+        guard let selfBigUInt = BigUInt.init(self.toWei().rawValue) else { return self }
+        guard let toBigUInt = BigUInt.init(to.toWei().rawValue) else { return self }
+        return Wei((selfBigUInt + toBigUInt).description).toEther()
     }
     
 }
