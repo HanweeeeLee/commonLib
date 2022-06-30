@@ -27,6 +27,7 @@ class TopImageStackView: UIView {
     
     private lazy var topImageView = UIImageView().then {
         $0.image = self.topImage
+        $0.contentMode = .scaleToFill
     }
     
     private let stackView = UIStackView().then {
@@ -63,17 +64,22 @@ class TopImageStackView: UIView {
         self.scrollView.snp.makeConstraints {
             $0.top.left.right.bottom.equalTo(self)
         }
-        self.scrollView.addSubview(topImageView)
-        self.topImageView.snp.makeConstraints {
-            $0.left.right.top.equalTo(self.scrollView)
-            $0.height.equalTo(self.topImageHeight)
-        }
+        
         self.scrollView.addSubview(self.stackView)
         self.stackView.snp.makeConstraints {
-            $0.top.equalTo(self.topImageView.snp.bottom)
+            $0.top.equalTo(self.scrollView.snp.top).offset(self.topImageHeight)
             $0.left.right.bottom.equalTo(self.scrollView)
             $0.width.equalTo(self.snp.width)
         }
+        
+        self.scrollView.addSubview(topImageView)
+        self.topImageView.snp.makeConstraints {
+            $0.centerX.equalTo(self.scrollView)
+            $0.height.equalTo(self.topImageHeight)
+            $0.width.equalTo(self.scrollView)
+            $0.bottom.equalTo(self.stackView.snp.top)
+        }
+        
     }
     
     // MARK: func
@@ -93,6 +99,19 @@ extension TopImageStackView: UIScrollViewDelegate {
         } else {
             self.delegate?.topImageShowPercent?(self, percent: Float(scrollView.contentOffset.y / self.topImageHeight))
         }
+        
+        if scrollView.contentOffset.y < 0 {
+            self.topImageView.snp.updateConstraints {
+                $0.height.equalTo(self.topImageHeight + abs(scrollView.contentOffset.y))
+                $0.width.equalTo(self.scrollView).offset(abs(scrollView.contentOffset.y))
+            }
+        } else if scrollView.contentOffset.y == 0 {
+            self.topImageView.snp.updateConstraints {
+                $0.height.equalTo(self.topImageHeight)
+                $0.width.equalTo(self.scrollView)
+            }
+        }
+        
     }
 }
 
