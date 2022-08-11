@@ -16,8 +16,14 @@ class ViewController: UIViewController, HWFlipViewDelegate {
 //        print("flipView: \(flipView), foregroundView: \(foregroundView), behindeView: \(behindeView), willShow: \(didShow)")
     }
     
-
-    @IBOutlet weak var flipView: HWFlipView!
+    @IBOutlet weak var btn: UIButton!
+    
+//    @IBOutlet weak var flipView: HWFlipView!
+    
+    var flipView: HWFlipView!
+    
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 //        let front: UIView = UIView()
@@ -31,10 +37,17 @@ class ViewController: UIViewController, HWFlipViewDelegate {
         front.image = UIImage(named: "header")
         let back: UIImageView = UIImageView()
         back.image = UIImage(named: "tomato")
-        self.flipView.setForegroundView(front)
-        self.flipView.setBehindViewView(back)
+        
+        self.flipView = HWFlipView(foregroundView: front, behindView: back)
         
         flipView.delegate = self
+        
+        self.view.addSubview(self.flipView)
+        self.flipView.snp.makeConstraints {
+            $0.top.equalTo(self.btn.snp.bottom)
+            $0.height.width.equalTo(300)
+            $0.centerX.equalTo(self.view)
+        }
     }
     
     @IBAction func flipAction(_ sender: Any) {
